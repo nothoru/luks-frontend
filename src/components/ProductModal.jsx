@@ -58,7 +58,7 @@ const ProductModal = ({ open, onClose, product }) => {
       variantName: selectedVariant.size_name,
       price: currentPrice,
       quantity: quantity,
-      image: `${import.meta.env.VITE_API_BASE_URL}${product.image}`,
+      image: product.image,
       totalPrice: totalPrice,
     };
     addToCart(cartItem);
@@ -86,10 +86,7 @@ const ProductModal = ({ open, onClose, product }) => {
       <DialogContent sx={{ p: 0 }}>
         <Box
           component="img"
-          src={
-            `${import.meta.env.VITE_API_BASE_URL}${product.image}` ||
-            "/path/to/default/image.png"
-          }
+          src={product.image || "/path/to/default/image.png"}
           alt={product.name}
           sx={{
             width: "100%",

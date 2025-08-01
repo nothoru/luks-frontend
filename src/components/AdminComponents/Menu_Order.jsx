@@ -301,11 +301,7 @@ const Menu_order = () => {
                         <CardMedia
                           component="img"
                           height="100"
-                          image={
-                            `${import.meta.env.VITE_API_BASE_URL}${
-                              item.image
-                            }` || "/path/to/default-image.png"
-                          }
+                          image={item.image || "/path/to/default-image.png"}
                           alt={item.name}
                         />
                         <CardContent

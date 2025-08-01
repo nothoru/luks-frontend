@@ -66,10 +66,7 @@ const MenuCard = ({ item, onProductClick }) => {
       <CardMedia
         component="img"
         sx={{ height: 160, objectFit: "cover" }}
-        image={
-          `${import.meta.env.VITE_API_BASE_URL}${item.image}` ||
-          "/path/to/default/image.png"
-        }
+        image={item.image || "/path/to/default/image.png"}
         alt={item.name}
       />
       <CardContent
