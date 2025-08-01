@@ -1,11 +1,23 @@
 // src/components/ProductModal.jsx (Corrected Price Alignment with Custom Component)
 import React, { useState, useEffect } from "react";
-import { Box, Button, Dialog, DialogContent, Typography, Grid, IconButton, Radio, ButtonGroup, DialogActions, Divider, } from "@mui/material";
+import {
+  Box,
+  Button,
+  Dialog,
+  DialogContent,
+  Typography,
+  Grid,
+  IconButton,
+  Radio,
+  ButtonGroup,
+  DialogActions,
+  Divider,
+} from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import AddIcon from "@mui/icons-material/Add";
 import RemoveIcon from "@mui/icons-material/Remove";
 import { useCart } from "../context/CartContext";
-import { useNotification } from "../context/Notifications"
+import { useNotification } from "../context/Notifications";
 
 const ProductModal = ({ open, onClose, product }) => {
   const [quantity, setQuantity] = useState(1);
@@ -46,7 +58,7 @@ const ProductModal = ({ open, onClose, product }) => {
       variantName: selectedVariant.size_name,
       price: currentPrice,
       quantity: quantity,
-      image: product.image,
+      image: `${import.meta.env.VITE_API_BASE_URL}${product.image}`,
       totalPrice: totalPrice,
     };
     addToCart(cartItem);
@@ -74,7 +86,10 @@ const ProductModal = ({ open, onClose, product }) => {
       <DialogContent sx={{ p: 0 }}>
         <Box
           component="img"
-          src={product.image || "/path/to/default/image.png"}
+          src={
+            `${import.meta.env.VITE_API_BASE_URL}${product.image}` ||
+            "/path/to/default/image.png"
+          }
           alt={product.name}
           sx={{
             width: "100%",

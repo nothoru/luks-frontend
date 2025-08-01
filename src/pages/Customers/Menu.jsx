@@ -1,7 +1,21 @@
 // src/pages/Customers/Menu.jsx (New Compact Version)
 import React, { useState, useEffect, useRef } from "react";
 import axiosInstance from "../../api/axiosInstance";
-import { Box, Grid, Typography, Card, CardMedia, CardContent, IconButton, Container, CircularProgress, Alert, Tabs, Tab, AppBar, } from "@mui/material";
+import {
+  Box,
+  Grid,
+  Typography,
+  Card,
+  CardMedia,
+  CardContent,
+  IconButton,
+  Container,
+  CircularProgress,
+  Alert,
+  Tabs,
+  Tab,
+  AppBar,
+} from "@mui/material";
 import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
 import ProductModal from "../../components/ProductModal";
 import Base from "../../components/Base";
@@ -52,7 +66,10 @@ const MenuCard = ({ item, onProductClick }) => {
       <CardMedia
         component="img"
         sx={{ height: 160, objectFit: "cover" }}
-        image={item.image || "/path/to/default/image.png"}
+        image={
+          `${import.meta.env.VITE_API_BASE_URL}${item.image}` ||
+          "/path/to/default/image.png"
+        }
         alt={item.name}
       />
       <CardContent

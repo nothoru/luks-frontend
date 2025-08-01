@@ -1,6 +1,31 @@
 // src/components/AdminComponents/Menu_Order.jsx
 import React, { useState, useEffect } from "react";
-import { Box, Typography, Paper, Grid, Button, TextField, InputAdornment, MenuItem, Select, Divider, IconButton, Tabs, Tab, CircularProgress, Alert, Card, CardActionArea, CardMedia, CardContent, Popover, List, ListItem, ListItemButton, ListItemText, } from "@mui/material";
+import {
+  Box,
+  Typography,
+  Paper,
+  Grid,
+  Button,
+  TextField,
+  InputAdornment,
+  MenuItem,
+  Select,
+  Divider,
+  IconButton,
+  Tabs,
+  Tab,
+  CircularProgress,
+  Alert,
+  Card,
+  CardActionArea,
+  CardMedia,
+  CardContent,
+  Popover,
+  List,
+  ListItem,
+  ListItemButton,
+  ListItemText,
+} from "@mui/material";
 import { Add, Remove, Delete } from "@mui/icons-material";
 import axiosInstance from "../../api/axiosInstance";
 import { useNotification } from "../../context/Notifications";
@@ -276,7 +301,11 @@ const Menu_order = () => {
                         <CardMedia
                           component="img"
                           height="100"
-                          image={item.image || "/path/to/default-image.png"}
+                          image={
+                            `${import.meta.env.VITE_API_BASE_URL}${
+                              item.image
+                            }` || "/path/to/default-image.png"
+                          }
                           alt={item.name}
                         />
                         <CardContent
