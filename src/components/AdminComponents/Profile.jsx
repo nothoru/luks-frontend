@@ -1,7 +1,20 @@
 // src/components/AdminComponents/Profile.jsx
 
 import React, { useState, useEffect, useRef } from "react";
-import { Box, Typography, TextField, Grid, Button, Paper, CircularProgress, Alert, Switch, FormControlLabel, Dialog, DialogTitle, DialogContent, DialogActions, } from "@mui/material";
+import {
+  Box,
+  Typography,
+  TextField,
+  Grid,
+  Button,
+  Paper,
+  CircularProgress,
+  Alert,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+} from "@mui/material";
 import axiosInstance from "../../api/axiosInstance";
 import { useAuth } from "../../context/AuthContext";
 import Webcam from "react-webcam";
@@ -17,7 +30,6 @@ const Profile = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
-  const [isFacialEnabled, setIsFacialEnabled] = useState(false);
   const { showNotification } = useNotification();
 
   const [passwordDialogOpen, setPasswordDialogOpen] = useState(false);
@@ -225,23 +237,6 @@ const Profile = () => {
               </Button>
             </Box>
 
-            <Box
-              sx={{ mt: 2, p: 2, border: "1px dashed grey", borderRadius: 1 }}
-            >
-              <FormControlLabel
-                control={
-                  <Switch
-                    checked={isFacialEnabled}
-                    onChange={(e) => setIsFacialEnabled(e.target.checked)}
-                  />
-                }
-                label="Enable Facial Recognition"
-              />
-              <Typography variant="caption" display="block">
-                Enable login with your face
-              </Typography>
-            </Box>
-
             <Box sx={{ mt: 3 }}>
               <Typography variant="subtitle1" fontWeight="bold">
                 Face Recognition
@@ -260,6 +255,7 @@ const Profile = () => {
         </Grid>
       </Grid>
 
+      {/* Change Password Dialog */}
       <Dialog
         open={passwordDialogOpen}
         onClose={handlePasswordDialogClose}
@@ -315,6 +311,7 @@ const Profile = () => {
         </DialogActions>
       </Dialog>
 
+      {/* Face Data Dialog */}
       <Dialog
         open={openDialog}
         onClose={() => setOpenDialog(false)}
@@ -327,8 +324,14 @@ const Profile = () => {
             display: "flex",
             flexDirection: "column",
             alignItems: "center",
+            gap: 2,
           }}
         >
+          <Typography variant="body2" textAlign="center">
+            Please ensure your face is centered in the frame. Avoid wearing hats
+            or glasses. Use a well-lit environment for accurate capture.
+          </Typography>
+
           <Webcam
             audio={false}
             ref={webcamRef}
@@ -336,6 +339,7 @@ const Profile = () => {
             videoConstraints={{ facingMode: "user" }}
             style={{ width: "100%", maxWidth: 400, borderRadius: 8 }}
           />
+
           {faceStatus && (
             <Alert severity="info" sx={{ mt: 2 }}>
               {faceStatus}
