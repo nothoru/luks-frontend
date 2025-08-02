@@ -19,7 +19,8 @@ import CancelIcon from "@mui/icons-material/Cancel";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import FaceIcon from "@mui/icons-material/Face";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
+import axiosInstance from "../../../api/axiosInstance";
+
 import { useAuth } from "../../../context/AuthContext";
 
 export default function FaceLogin() {
