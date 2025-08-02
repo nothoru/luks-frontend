@@ -1,48 +1,73 @@
 // src/components/AdminComponents/Sales.jsx
 import React, { useEffect, useState, useCallback } from "react";
-import { Box, Typography, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Button, Stack, CircularProgress, Alert, Tabs, Tab, Grid, TablePagination, TableFooter, Menu, MenuItem, } from "@mui/material";
+import {
+  Box,
+  Typography,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Paper,
+  Button,
+  Stack,
+  CircularProgress,
+  Alert,
+  Tabs,
+  Tab,
+  Grid,
+  TablePagination,
+  TableFooter,
+  Menu,
+  MenuItem,
+} from "@mui/material";
 import MonetizationOnIcon from "@mui/icons-material/MonetizationOn";
 import ReceiptLongIcon from "@mui/icons-material/ReceiptLong";
 import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
 import PollIcon from "@mui/icons-material/Poll";
-import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
+import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown";
 import axiosInstance from "../../api/axiosInstance";
-import { subDays } from 'date-fns';
+import { subDays } from "date-fns";
 import { useNotification } from "../../context/Notifications";
-import DateRangePicker from './DateRangePicker';
-import { exportPerformanceToPDF, exportPerformanceToCSV, exportTransactionsToPDF, exportTransactionsToCSV } from './exportUtils';
-
+import DateRangePicker from "./DateRangePicker";
+import {
+  exportPerformanceToPDF,
+  exportPerformanceToCSV,
+  exportTransactionsToPDF,
+  exportTransactionsToCSV,
+} from "./exportUtils";
 
 const toLocalDateString = (date) => {
-  if (!date) return '';
+  if (!date) return "";
   const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
   return `${year}-${month}-${day}`;
 };
 
 const StatCard = ({ title, value, icon, color }) => (
-    <Paper
-      elevation={3}
-      sx={{ p: 2, display: "flex", alignItems: "center", height: "100%" }}
-    >
-      <Box sx={{ bgcolor: color, p: 1.5, borderRadius: "50%", mr: 2 }}>
-        {icon}
-      </Box>
-      <Box>
-        <Typography variant="h6" fontWeight="bold">
-          {value}
-        </Typography>
-        <Typography color="text.secondary">{title}</Typography>
-      </Box>
-    </Paper>
-  );
+  <Paper
+    elevation={3}
+    sx={{ p: 2, display: "flex", alignItems: "center", height: "100%" }}
+  >
+    <Box sx={{ bgcolor: color, p: 1.5, borderRadius: "50%", mr: 2 }}>
+      {icon}
+    </Box>
+    <Box>
+      <Typography variant="h6" fontWeight="bold">
+        {value}
+      </Typography>
+      <Typography color="text.secondary">{title}</Typography>
+    </Box>
+  </Paper>
+);
 
 const TransactionHistory = ({ dateRange }) => {
   const [salesData, setSalesData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  
+
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [totalRows, setTotalRows] = useState(0);
@@ -63,9 +88,11 @@ const TransactionHistory = ({ dateRange }) => {
       setLoading(true);
       const startDateStr = toLocalDateString(dateRange.startDate);
       const endDateStr = toLocalDateString(dateRange.endDate);
-      
-      const url = `/api/orders/admin/sales-report/?page=${page + 1}&page_size=${rowsPerPage}&start_date=${startDateStr}&end_date=${endDateStr}`;
-      
+
+      const url = `/api/orders/admin/sales-report/?page=${
+        page + 1
+      }&page_size=${rowsPerPage}&start_date=${startDateStr}&end_date=${endDateStr}`;
+
       const response = await axiosInstance.get(url);
       setSalesData(response.data.results);
       setTotalRows(response.data.count);
@@ -98,13 +125,19 @@ const TransactionHistory = ({ dateRange }) => {
     try {
       const startDateStr = toLocalDateString(dateRange.startDate);
       const endDateStr = toLocalDateString(dateRange.endDate);
-      
-      const response = await axiosInstance.get(`/api/orders/admin/sales-report/all/?start_date=${startDateStr}&end_date=${endDateStr}`);
+
+      const response = await axiosInstance.get(
+        `/api/orders/admin/sales-report/all/?start_date=${startDateStr}&end_date=${endDateStr}`
+      );
       const allTransactions = response.data;
 
-      if (format === 'pdf') {
-        exportTransactionsToPDF(allTransactions, dateRange.startDate, dateRange.endDate);
-      } else if (format === 'csv') {
+      if (format === "pdf") {
+        exportTransactionsToPDF(
+          allTransactions,
+          dateRange.startDate,
+          dateRange.endDate
+        );
+      } else if (format === "csv") {
         exportTransactionsToCSV(allTransactions);
       }
     } catch (err) {
@@ -123,91 +156,102 @@ const TransactionHistory = ({ dateRange }) => {
 
   return (
     <Box>
-        <Stack direction="row" justifyContent="flex-end" mb={2}>
-            <Button
-              variant="contained"
-              onClick={handleClick}
-              disabled={totalRows === 0 || isExporting}
-              endIcon={<ArrowDropDownIcon />}
-            >
-              {isExporting ? <CircularProgress size={24} color="inherit" /> : "Export"}
-            </Button>
-            <Menu anchorEl={anchorEl} open={open} onClose={handleClose}>
-              <MenuItem onClick={() => handleExport('pdf')}>Export as PDF</MenuItem>
-              <MenuItem onClick={() => handleExport('csv')}>Export as CSV</MenuItem>
-            </Menu>
-        </Stack>
-        <TableContainer component={Paper}>
-          <Table>
-            <TableHead>
+      <Stack direction="row" justifyContent="flex-end" mb={2}>
+        <Button
+          variant="contained"
+          onClick={handleClick}
+          disabled={totalRows === 0 || isExporting}
+          endIcon={<ArrowDropDownIcon />}
+        >
+          {isExporting ? (
+            <CircularProgress size={24} color="inherit" />
+          ) : (
+            "Export"
+          )}
+        </Button>
+        <Menu anchorEl={anchorEl} open={open} onClose={handleClose}>
+          <MenuItem onClick={() => handleExport("pdf")}>Export as PDF</MenuItem>
+          <MenuItem onClick={() => handleExport("csv")}>Export as CSV</MenuItem>
+        </Menu>
+      </Stack>
+      <TableContainer component={Paper}>
+        <Table>
+          <TableHead>
+            <TableRow>
+              <TableCell sx={{ fontWeight: "bold" }}>Order #</TableCell>
+              <TableCell sx={{ fontWeight: "bold" }}>Date & Time</TableCell>
+              <TableCell sx={{ fontWeight: "bold" }}>Type</TableCell>
+              <TableCell sx={{ fontWeight: "bold" }}>Customer/Staff</TableCell>
+              <TableCell sx={{ fontWeight: "bold" }}>Items</TableCell>
+              <TableCell sx={{ fontWeight: "bold" }} align="right">
+                Total
+              </TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {loading ? (
               <TableRow>
-                <TableCell sx={{ fontWeight: "bold" }}>Order #</TableCell>
-                <TableCell sx={{ fontWeight: "bold" }}>Date & Time</TableCell>
-                <TableCell sx={{ fontWeight: "bold" }}>Type</TableCell>
-                <TableCell sx={{ fontWeight: "bold" }}>Customer/Staff</TableCell>
-                <TableCell sx={{ fontWeight: "bold" }}>Items</TableCell>
-                <TableCell sx={{ fontWeight: "bold" }} align="right">
-                  Total
+                <TableCell colSpan={6} align="center">
+                  <CircularProgress />
                 </TableCell>
               </TableRow>
-            </TableHead>
-            <TableBody>
-              {loading ? (
-                <TableRow>
-                  <TableCell colSpan={6} align="center">
-                    <CircularProgress />
-                  </TableCell>
-                </TableRow>
-              ) : error ? (
-                <TableRow>
-                  <TableCell colSpan={6} align="center">
-                    <Alert severity="error">{error}</Alert>
-                  </TableCell>
-                </TableRow>
-              ) : salesData.length > 0 ? (
-                salesData.map((row) => (
-                  <TableRow key={row.id}>
-                    <TableCell>{row.order_number}</TableCell>
-                    <TableCell>{formatDate(row.processed_at)}</TableCell>
-                    <TableCell>{row.type}</TableCell>
-                    <TableCell>
-                      {row.user
-                        ? `${row.user.first_name} ${row.user.last_name}`
-                        : row.processed_by_staff
-                        ? row.processed_by_staff.first_name
-                        : "Walk-in"}
-                    </TableCell>
-                    <TableCell sx={{ maxWidth: 300, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                      {row.items_summary}
-                    </TableCell>
-                    <TableCell align="right">
-                      {formatCurrency(row.total_amount)}
-                    </TableCell>
-                  </TableRow>
-                ))
-              ) : (
-                <TableRow>
-                  <TableCell colSpan={6} align="center">
-                    No transaction records found for this period.
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-            <TableFooter>
+            ) : error ? (
               <TableRow>
-                <TablePagination
-                    rowsPerPageOptions={[5, 10, 25]}
-                    colSpan={6}
-                    count={totalRows}
-                    rowsPerPage={rowsPerPage}
-                    page={page}
-                    onPageChange={handleChangePage}
-                    onRowsPerPageChange={handleChangeRowsPerPage}
-                />
+                <TableCell colSpan={6} align="center">
+                  <Alert severity="error">{error}</Alert>
+                </TableCell>
               </TableRow>
-            </TableFooter>
-          </Table>
-        </TableContainer>
+            ) : salesData.length > 0 ? (
+              salesData.map((row) => (
+                <TableRow key={row.id}>
+                  <TableCell>{row.order_number}</TableCell>
+                  <TableCell>{formatDate(row.processed_at)}</TableCell>
+                  <TableCell>{row.type}</TableCell>
+                  <TableCell>
+                    {row.user
+                      ? `${row.user.first_name} ${row.user.last_name}`
+                      : row.processed_by_staff
+                      ? row.processed_by_staff.first_name
+                      : "Walk-in"}
+                  </TableCell>
+                  <TableCell
+                    sx={{
+                      maxWidth: 300,
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
+                      whiteSpace: "nowrap",
+                    }}
+                  >
+                    {row.items_summary}
+                  </TableCell>
+                  <TableCell align="right">
+                    {formatCurrency(row.total_amount)}
+                  </TableCell>
+                </TableRow>
+              ))
+            ) : (
+              <TableRow>
+                <TableCell colSpan={6} align="center">
+                  No transaction records found for this period.
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+          <TableFooter>
+            <TableRow>
+              <TablePagination
+                rowsPerPageOptions={[5, 10, 25]}
+                colSpan={6}
+                count={totalRows}
+                rowsPerPage={rowsPerPage}
+                page={page}
+                onPageChange={handleChangePage}
+                onRowsPerPageChange={handleChangeRowsPerPage}
+              />
+            </TableRow>
+          </TableFooter>
+        </Table>
+      </TableContainer>
     </Box>
   );
 };
@@ -230,7 +274,7 @@ const PerformanceReport = ({ dateRange }) => {
         setLoading(true);
         const startDateStr = toLocalDateString(dateRange.startDate);
         const endDateStr = toLocalDateString(dateRange.endDate);
-        
+
         const response = await axiosInstance.get(
           `/api/analytics/performance-report/?start_date=${startDateStr}&end_date=${endDateStr}`
         );
@@ -247,9 +291,9 @@ const PerformanceReport = ({ dateRange }) => {
 
   const handleExport = (format) => {
     handleClose();
-    if (format === 'pdf') {
+    if (format === "pdf") {
       exportPerformanceToPDF(data, dateRange.startDate, dateRange.endDate);
-    } else if (format === 'csv') {
+    } else if (format === "csv") {
       exportPerformanceToCSV(data);
     }
   };
@@ -266,7 +310,13 @@ const PerformanceReport = ({ dateRange }) => {
 
   return (
     <Box>
-      <Stack direction="row" spacing={2} mb={3} alignItems="center" justifyContent="flex-end">
+      <Stack
+        direction="row"
+        spacing={2}
+        mb={3}
+        alignItems="center"
+        justifyContent="flex-end"
+      >
         <Button
           variant="contained"
           onClick={handleClick}
@@ -276,8 +326,8 @@ const PerformanceReport = ({ dateRange }) => {
           Export
         </Button>
         <Menu anchorEl={anchorEl} open={open} onClose={handleClose}>
-          <MenuItem onClick={() => handleExport('pdf')}>Export as PDF</MenuItem>
-          <MenuItem onClick={() => handleExport('csv')}>Export as CSV</MenuItem>
+          <MenuItem onClick={() => handleExport("pdf")}>Export as PDF</MenuItem>
+          <MenuItem onClick={() => handleExport("csv")}>Export as CSV</MenuItem>
         </Menu>
       </Stack>
       <Grid container spacing={3} mb={3}>
@@ -363,8 +413,8 @@ const PerformanceReport = ({ dateRange }) => {
 const Sales = () => {
   const [currentTab, setCurrentTab] = useState(0);
   const [dateRange, setDateRange] = useState({
-    startDate: subDays(new Date(), 7),
-    endDate: new Date(),
+    startDate: new Date(), // Default start date is today
+    endDate: new Date(), // Default end date is today
   });
 
   const handleTabChange = (event, newValue) => {
@@ -378,9 +428,9 @@ const Sales = () => {
   return (
     <Box>
       <Stack
-        direction={{ xs: 'column', md: 'row' }}
+        direction={{ xs: "column", md: "row" }}
         justifyContent="space-between"
-        alignItems={{ xs: 'flex-start', md: 'center' }}
+        alignItems={{ xs: "flex-start", md: "center" }}
         spacing={2}
         mb={3}
       >
