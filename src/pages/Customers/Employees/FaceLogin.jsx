@@ -1,17 +1,25 @@
 import React, { useRef, useState } from "react";
 import Webcam from "react-webcam";
 import {
-  Container,
   Typography,
   Snackbar,
   Alert,
   Box,
   Button,
   CircularProgress,
-  Paper,
+  Divider,
+  List,
+  ListItem,
+  ListItemIcon,
+  ListItemText,
+  Grid,
 } from "@mui/material";
+import CheckCircleIcon from "@mui/icons-material/CheckCircle";
+import CancelIcon from "@mui/icons-material/Cancel";
+import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import FaceIcon from "@mui/icons-material/Face";
 import { useNavigate } from "react-router-dom";
-import axiosInstance from "../../../api/axiosInstance";
+import axios from "axios";
 import { useAuth } from "../../../context/AuthContext";
 
 export default function FaceLogin() {
@@ -58,12 +66,10 @@ export default function FaceLogin() {
         return;
       }
 
-      // Save to localStorage (optional, for persistence)
       localStorage.setItem("token", token);
       localStorage.setItem("user_id", user_id);
       localStorage.setItem("role", role);
 
-      // Set user context
       login({ access: token, role, id: user_id });
 
       setSnackbar({
@@ -72,15 +78,8 @@ export default function FaceLogin() {
         message: "✅ Face recognized! Logging in...",
       });
 
-      // Redirect based on role
       setTimeout(() => {
-        if (role === "admin") {
-          navigate("/admin/dashboard");
-        } else if (role === "staff") {
-          navigate("/staff/orders");
-        } else {
-          navigate("/");
-        }
+        navigate(role === "admin" ? "/admin/dashboard" : "/admin/orders");
       }, 1500);
     } catch (err) {
       console.error("Face login error:", err);
@@ -99,64 +98,126 @@ export default function FaceLogin() {
   };
 
   return (
-    <Container maxWidth="sm" sx={{ mt: 5, textAlign: "center" }}>
-      <Paper elevation={3} sx={{ p: 4 }}>
-        <Typography variant="h4" gutterBottom>
-          Face Login
-        </Typography>
-        <Typography mb={2}>
-          Align your face in the box and click the button to verify your
-          identity.
-        </Typography>
+    <Box
+      sx={{
+        height: "100vh",
+        width: "100vw",
+        overflow: "hidden",
+        bgcolor: "#faf7f2",
+      }}
+    >
+      <Grid container sx={{ height: "100%" }}>
+        {/* Left: Instructions */}
+        <Grid item xs={12} md={6} sx={{ p: 6, overflowY: "auto" }}>
+          <Box sx={{ maxWidth: 500 }}>
+            <FaceIcon color="primary" sx={{ fontSize: 40 }} />
+            <Typography variant="h4" gutterBottom>
+              Face Login
+            </Typography>
+            <Typography variant="body1" sx={{ color: "text.secondary", mb: 2 }}>
+              Use your face to securely log in to your account.
+            </Typography>
+            <Divider sx={{ mb: 2 }} />
+            <Typography variant="subtitle1" fontWeight="bold" gutterBottom>
+              Instructions:
+            </Typography>
+            <List dense>
+              <ListItem>
+                <ListItemIcon>
+                  <CheckCircleIcon color="success" />
+                </ListItemIcon>
+                <ListItemText primary="Face should be clearly visible inside the frame." />
+              </ListItem>
+              <ListItem>
+                <ListItemIcon>
+                  <CheckCircleIcon color="success" />
+                </ListItemIcon>
+                <ListItemText primary="Look directly at the camera with proper lighting." />
+              </ListItem>
+              <ListItem>
+                <ListItemIcon>
+                  <CancelIcon color="error" />
+                </ListItemIcon>
+                <ListItemText primary="Avoid wearing face masks, sunglasses, or blocking face with hands." />
+              </ListItem>
+              <ListItem>
+                <ListItemIcon>
+                  <CancelIcon color="error" />
+                </ListItemIcon>
+                <ListItemText primary="Do not move too fast during capture." />
+              </ListItem>
+            </List>
+          </Box>
+        </Grid>
 
-        <Box
+        {/* Right: Webcam + Buttons */}
+        <Grid
+          item
+          xs={12}
+          md={6}
           sx={{
-            position: "relative",
-            width: 400,
-            height: 300,
-            mx: "auto",
-            mb: 2,
-            borderRadius: 2,
-            overflow: "hidden",
-            border: "2px solid #1976d2",
+            p: 4,
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            bgcolor: "#fff",
           }}
         >
-          <Webcam
-            ref={webcamRef}
-            audio={false}
-            screenshotFormat="image/jpeg"
-            width={400}
-            height={300}
-            videoConstraints={{
+          <Box
+            sx={{
+              position: "relative",
               width: 400,
               height: 300,
-              facingMode: "user",
+              border: "3px solid #1976d2",
+              borderRadius: 2,
+              overflow: "hidden",
+              mb: 3,
             }}
-          />
-        </Box>
-
-        <Box
-          sx={{
-            display: "flex",
-            justifyContent: "center",
-            gap: 2,
-            flexWrap: "wrap",
-          }}
-        >
-          <Button
-            variant="contained"
-            onClick={handleFaceLogin}
-            disabled={loading}
           >
-            {loading ? "Processing..." : "Login with Face"}
-          </Button>
+            <Webcam
+              ref={webcamRef}
+              audio={false}
+              screenshotFormat="image/jpeg"
+              width="100%"
+              height="100%"
+              videoConstraints={{
+                width: 400,
+                height: 300,
+                facingMode: "user",
+              }}
+            />
+          </Box>
 
-          <Button variant="contained" color="primary" onClick={handleBack}>
-            Back to Staff Login
-          </Button>
-        </Box>
+          <Box
+            sx={{
+              display: "flex",
+              gap: 2,
+              flexWrap: "wrap",
+              justifyContent: "center",
+            }}
+          >
+            <Button
+              variant="contained"
+              color="success"
+              onClick={handleFaceLogin}
+              disabled={loading}
+            >
+              {loading ? "Processing..." : "Login with Face"}
+            </Button>
 
-        {loading && <CircularProgress sx={{ mt: 2 }} />}
+            <Button
+              variant="outlined"
+              color="primary"
+              startIcon={<ArrowBackIcon />}
+              onClick={handleBack}
+            >
+              Back to Staff Login
+            </Button>
+          </Box>
+
+          {loading && <CircularProgress sx={{ mt: 3 }} />}
+        </Grid>
 
         <Snackbar
           open={snackbar.open}
@@ -172,7 +233,7 @@ export default function FaceLogin() {
             {snackbar.message}
           </Alert>
         </Snackbar>
-      </Paper>
-    </Container>
+      </Grid>
+    </Box>
   );
 }
