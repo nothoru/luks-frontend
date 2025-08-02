@@ -1,8 +1,17 @@
 import React, { useRef, useState } from "react";
 import Webcam from "react-webcam";
-import { Container, Typography, Snackbar, Alert, Box, Button, CircularProgress, Paper, } from "@mui/material";
+import {
+  Container,
+  Typography,
+  Snackbar,
+  Alert,
+  Box,
+  Button,
+  CircularProgress,
+  Paper,
+} from "@mui/material";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
+import axiosInstance from "../../../api/axiosInstance";
 import { useAuth } from "../../../context/AuthContext";
 
 export default function FaceLogin() {
@@ -23,7 +32,7 @@ export default function FaceLogin() {
     setLoading(true);
 
     try {
-      const response = await axios.post("http://localhost:8000/api/facial/verify_face/", {
+      const response = await axiosInstance.post("/api/facial/verify_face/", {
         image: screenshot,
       });
 
@@ -73,7 +82,6 @@ export default function FaceLogin() {
           navigate("/");
         }
       }, 1500);
-
     } catch (err) {
       console.error("Face login error:", err);
       setSnackbar({
@@ -93,9 +101,12 @@ export default function FaceLogin() {
   return (
     <Container maxWidth="sm" sx={{ mt: 5, textAlign: "center" }}>
       <Paper elevation={3} sx={{ p: 4 }}>
-        <Typography variant="h4" gutterBottom>Face Login</Typography>
+        <Typography variant="h4" gutterBottom>
+          Face Login
+        </Typography>
         <Typography mb={2}>
-          Align your face in the box and click the button to verify your identity.
+          Align your face in the box and click the button to verify your
+          identity.
         </Typography>
 
         <Box
@@ -124,8 +135,19 @@ export default function FaceLogin() {
           />
         </Box>
 
-        <Box sx={{ display: "flex", justifyContent: "center", gap: 2, flexWrap: "wrap" }}>
-          <Button variant="contained" onClick={handleFaceLogin} disabled={loading}>
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "center",
+            gap: 2,
+            flexWrap: "wrap",
+          }}
+        >
+          <Button
+            variant="contained"
+            onClick={handleFaceLogin}
+            disabled={loading}
+          >
             {loading ? "Processing..." : "Login with Face"}
           </Button>
 
