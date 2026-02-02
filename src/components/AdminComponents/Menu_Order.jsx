@@ -79,8 +79,8 @@ const Menu_order = () => {
         orderItems.map((i) =>
           i.variationId === variation.id
             ? { ...i, quantity: i.quantity + 1 }
-            : i
-        )
+            : i,
+        ),
       );
     } else {
       setOrderItems([
@@ -126,8 +126,10 @@ const Menu_order = () => {
     if (existingItem?.quantity > 1) {
       setOrderItems(
         orderItems.map((i) =>
-          i.variationId === variationId ? { ...i, quantity: i.quantity - 1 } : i
-        )
+          i.variationId === variationId
+            ? { ...i, quantity: i.quantity - 1 }
+            : i,
+        ),
       );
     } else {
       setOrderItems(orderItems.filter((i) => i.variationId !== variationId));
@@ -165,10 +167,10 @@ const Menu_order = () => {
     if (amountReceived < orderTotal) {
       showNotification(
         `Error: Cash Received (₱${amountReceived.toFixed(
-          2
+          2,
         )}) must be greater than or equal to the total amount (₱${orderTotal.toFixed(
-          2
-        )}).`
+          2,
+        )}).`,
       );
       return;
     }
@@ -197,11 +199,20 @@ const Menu_order = () => {
       setTableNumber("");
       setCashReceived("");
     } catch (err) {
-      showNotification(
-        `Error creating POS order: ${
-          err.response?.data?.error || "Please try again"
-        }`
-      );
+      let errorMessage = "Error creating POS order.";
+
+      if (err.response && err.response.data) {
+        if (err.response.data.error) {
+          errorMessage = err.response.data.error;
+        } else {
+          const errorValues = Object.values(err.response.data).flat();
+          if (errorValues.length > 0) {
+            errorMessage = errorValues.join(" ");
+          }
+        }
+      }
+      showNotification(errorMessage, "error");
+      // --- REVISION END ---
       console.error(err);
     } finally {
       setIsSubmitting(false);
@@ -317,7 +328,7 @@ const Menu_order = () => {
                           <Typography variant="body2" color="primary">
                             {item.variations.length > 0
                               ? `₱${parseFloat(
-                                  item.variations[0].price
+                                  item.variations[0].price,
                                 ).toFixed(2)}`
                               : "N/A"}
                           </Typography>
@@ -401,12 +412,20 @@ const Menu_order = () => {
               <MenuItem value="dine-in">Dine-in</MenuItem>
               <MenuItem value="take-out">Take-out</MenuItem>
             </Select>
+
             <TextField
               label="Table Number"
               value={tableNumber}
-              onChange={(e) => setTableNumber(e.target.value)}
+              onChange={(e) => {
+                const regex = /^[0-9\b]+$/;
+                if (e.target.value === "" || regex.test(e.target.value)) {
+                  setTableNumber(e.target.value);
+                }
+              }}
+              inputProps={{ inputMode: "numeric", pattern: "[0-9]*" }}
               size="small"
               fullWidth
+              disabled={diningOption === "take-out"}
             />
           </Box>
           <Box sx={{ display: "flex", gap: 1 }}>

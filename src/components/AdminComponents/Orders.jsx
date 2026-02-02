@@ -1,6 +1,30 @@
 // src/components/AdminComponents/Orders.jsx
 import React, { useState, useEffect, useCallback } from "react";
-import { Box, Typography, Paper, Button, List, ListItem, Dialog, DialogTitle, DialogContent, DialogActions, Chip, Table, TableBody, TableCell, TableRow, Tabs, Tab, Grid, TextField, TableHead, InputAdornment, CircularProgress, Alert, } from "@mui/material";
+import {
+  Box,
+  Typography,
+  Paper,
+  Button,
+  List,
+  ListItem,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Chip,
+  Table,
+  TableBody,
+  TableCell,
+  TableRow,
+  Tabs,
+  Tab,
+  Grid,
+  TextField,
+  TableHead,
+  InputAdornment,
+  CircularProgress,
+  Alert,
+} from "@mui/material";
 import axiosInstance from "../../api/axiosInstance";
 import SearchIcon from "@mui/icons-material/Search";
 import { useNotification } from "../../context/Notifications";
@@ -87,8 +111,8 @@ const Orders = () => {
       if (amountReceived < totalAmount) {
         showNotification(
           `Error: Amount Received (₱${amountReceived.toFixed(
-            2
-          )}) must be >= total (₱${totalAmount.toFixed(2)}).`
+            2,
+          )}) must be >= total (₱${totalAmount.toFixed(2)}).`,
         );
         return;
       }
@@ -96,23 +120,33 @@ const Orders = () => {
       payload.amount_paid = tempAmountReceived;
       payload.change_given = calculateChange(
         tempAmountReceived,
-        selectedOrder.total_amount
+        selectedOrder.total_amount,
       );
     }
 
     try {
       await axiosInstance.patch(
         `/api/orders/admin/${orderId}/update/`,
-        payload
+        payload,
       );
       handleCloseDialog();
       setCurrentTab(newStatus);
+      showNotification("Order updated successfully", "success");
     } catch (err) {
-      showNotification(
-        `Error updating order: ${
-          err.response?.data?.error || "Please try again."
-        }`
-      );
+      let errorMessage = "Failed to update order.";
+
+      if (err.response && err.response.data) {
+        if (err.response.data.error) {
+          errorMessage = err.response.data.error;
+        } else {
+          const errorValues = Object.values(err.response.data).flat();
+          if (errorValues.length > 0) {
+            errorMessage = errorValues.join(" ");
+          }
+        }
+      }
+
+      showNotification(errorMessage, "error");
       console.error(err);
     }
   };
@@ -258,8 +292,8 @@ const Orders = () => {
                             order.user.last_name || ""
                           }`.trim()
                         : order.processed_by_staff
-                        ? `Staff: ${order.processed_by_staff.first_name}`
-                        : "Walk-in Customer"}
+                          ? `Staff: ${order.processed_by_staff.first_name}`
+                          : "Walk-in Customer"}
                     </Typography>
                   </Box>
                   <Typography variant="body2" sx={{ fontWeight: "bold" }}>
@@ -314,8 +348,8 @@ const Orders = () => {
                       selectedOrder.user.last_name || ""
                     }`.trim()
                   : selectedOrder.processed_by_staff
-                  ? `Staff: ${selectedOrder.processed_by_staff.first_name}`
-                  : "Walk-in Customer"}
+                    ? `Staff: ${selectedOrder.processed_by_staff.first_name}`
+                    : "Walk-in Customer"}
               </Typography>
               {getDiningMethodChip(selectedOrder.dining_method)}
             </Box>
@@ -359,14 +393,24 @@ const Orders = () => {
                 Table No:
                 {selectedOrder.status === "pending" &&
                 selectedOrder.dining_method === "dine-in" ? (
+                  /* --- REVISION 2 START: Input Limitation --- */
                   <TextField
                     size="small"
                     variant="standard"
                     sx={{ width: "60px", ml: 1 }}
                     value={tempTableNumber}
-                    onChange={(e) => setTempTableNumber(e.target.value)}
+                    // Strict Numeric Input
+                    onChange={(e) => {
+                      const regex = /^[0-9\b]+$/;
+                      if (e.target.value === "" || regex.test(e.target.value)) {
+                        setTempTableNumber(e.target.value);
+                      }
+                    }}
+                    inputProps={{ inputMode: "numeric", pattern: "[0-9]*" }}
                   />
                 ) : (
+                  /* --- REVISION 2 END --- */
+
                   <span style={{ marginLeft: 8, fontWeight: "bold" }}>
                     {selectedOrder.table_number || "N/A"}
                   </span>
@@ -412,7 +456,7 @@ const Orders = () => {
                       disabled
                       value={calculateChange(
                         tempAmountReceived,
-                        selectedOrder.total_amount
+                        selectedOrder.total_amount,
                       )}
                       InputProps={{
                         startAdornment: (
@@ -469,7 +513,7 @@ const Orders = () => {
                   variant="contained"
                   onClick={() => {
                     const currentIndex = statusOptions.findIndex(
-                      (opt) => opt.value === selectedOrder.status
+                      (opt) => opt.value === selectedOrder.status,
                     );
                     const nextStatus = statusOptions[currentIndex + 1]?.value;
                     if (nextStatus) {
