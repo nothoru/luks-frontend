@@ -26,7 +26,7 @@ import {
   ListItemButton,
   ListItemText,
 } from "@mui/material";
-import { Add, Remove, Delete } from "@mui/icons-material";
+import { Add, Remove, Delete, Search } from "@mui/icons-material";
 import axiosInstance from "../../api/axiosInstance";
 import { useNotification } from "../../context/Notifications";
 
@@ -35,6 +35,8 @@ const Menu_order = () => {
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+
+  const [searchQuery, setSearchQuery] = useState("");
 
   const [popoverAnchorEl, setPopoverAnchorEl] = useState(null);
   const [selectedMenuItem, setSelectedMenuItem] = useState(null);
@@ -223,10 +225,14 @@ const Menu_order = () => {
     }
   };
 
-  const filteredMenuItems =
-    selectedCategory === "ALL"
-      ? menuItems
-      : menuItems.filter((item) => item.category.name === selectedCategory);
+  const filteredMenuItems = menuItems.filter((item) => {
+    const matchesCategory =
+      selectedCategory === "ALL" || item.category.name === selectedCategory;
+    const matchesSearch = item.name
+      .toLowerCase()
+      .includes(searchQuery.toLowerCase());
+    return matchesCategory && matchesSearch;
+  });
 
   if (loading)
     return (
@@ -250,6 +256,21 @@ const Menu_order = () => {
             overflow: "hidden",
           }}
         >
+          <TextField
+            fullWidth
+            placeholder="Search menu items..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            size="small"
+            sx={{ mb: 2, bgcolor: "background.paper" }}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <Search />
+                </InputAdornment>
+              ),
+            }}
+          />
           <Paper elevation={2} sx={{ mb: 2, flexShrink: 0 }}>
             <Tabs
               value={selectedCategory}

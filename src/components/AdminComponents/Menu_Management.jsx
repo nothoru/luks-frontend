@@ -1,9 +1,32 @@
 // src/components/AdminComponents/Menu_Management.jsx
 import React, { useState, useEffect, useCallback } from "react";
-import { Box, Typography, Button, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, IconButton, Select, MenuItem, FormControl, InputLabel, CircularProgress, Alert, TableFooter, TablePagination, Chip, } from "@mui/material";
-import { Edit, Add } from "@mui/icons-material";
+import {
+  Box,
+  Typography,
+  Button,
+  Paper,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  IconButton,
+  Select,
+  MenuItem,
+  FormControl,
+  InputLabel,
+  CircularProgress,
+  Alert,
+  TableFooter,
+  TablePagination,
+  Chip,
+  TextField,
+  InputAdornment,
+} from "@mui/material";
+import { Edit, Add, Search } from "@mui/icons-material";
 import axiosInstance from "../../api/axiosInstance";
-import MenuItemDialog from './MenuItemDialog'; 
+import MenuItemDialog from "./MenuItemDialog";
 
 const getStatusChip = (item) => {
   if (!item.is_available) {
@@ -19,8 +42,9 @@ const Menu_Management = () => {
   const [menuItems, setMenuItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  
+
   const [statusFilter, setStatusFilter] = useState("active");
+  const [searchQuery, setSearchQuery] = useState("");
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [totalRows, setTotalRows] = useState(0);
@@ -32,7 +56,9 @@ const Menu_Management = () => {
     try {
       setLoading(true);
       const menuRes = await axiosInstance.get(
-        `/api/menu/admin/items/?status=${statusFilter}&page=${page + 1}&page_size=${rowsPerPage}`
+        `/api/menu/admin/items/?status=${statusFilter}&page=${
+          page + 1
+        }&page_size=${rowsPerPage}&search=${searchQuery}`,
       );
       setMenuItems(menuRes.data.results);
       setTotalRows(menuRes.data.count);
@@ -42,7 +68,7 @@ const Menu_Management = () => {
     } finally {
       setLoading(false);
     }
-  }, [statusFilter, page, rowsPerPage]);
+  }, [statusFilter, page, rowsPerPage, searchQuery]);
 
   useEffect(() => {
     fetchData();
@@ -57,10 +83,10 @@ const Menu_Management = () => {
     setSelectedItem(null);
     setDialogOpen(false);
   };
-  
+
   const handleSaveSuccess = () => {
     handleCloseDialog();
-    fetchData(); 
+    fetchData();
   };
 
   const handleChangePage = (event, newPage) => setPage(newPage);
@@ -75,21 +101,58 @@ const Menu_Management = () => {
 
   return (
     <Box>
-      <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 2 }}>
-        <Typography variant="h4" fontWeight="bold">Menu Management</Typography>
-        <Button variant="contained" startIcon={<Add />} onClick={() => handleOpenDialog()}>
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          mb: 2,
+        }}
+      >
+        <Typography variant="h4" fontWeight="bold">
+          Menu Management
+        </Typography>
+        <Button
+          variant="contained"
+          startIcon={<Add />}
+          onClick={() => handleOpenDialog()}
+        >
           Add New Item
         </Button>
       </Box>
 
-      <FormControl sx={{ mb: 2, minWidth: 240 }} size="small">
-        <InputLabel>Filter by Status</InputLabel>
-        <Select value={statusFilter} label="Filter by Status" onChange={handleFilterChange}>
-          <MenuItem value="active">Active</MenuItem>
-          <MenuItem value="outofstock">Out of Stock</MenuItem>
-          <MenuItem value="archived">Archived</MenuItem>
-        </Select>
-      </FormControl>
+      <Box sx={{ display: "flex", gap: 2, mb: 2 }}>
+        <FormControl sx={{ minWidth: 200 }} size="small">
+          <InputLabel>Filter by Status</InputLabel>
+          <Select
+            value={statusFilter}
+            label="Filter by Status"
+            onChange={handleFilterChange}
+          >
+            <MenuItem value="active">Active</MenuItem>
+            <MenuItem value="outofstock">Out of Stock</MenuItem>
+            <MenuItem value="archived">Archived</MenuItem>
+          </Select>
+        </FormControl>
+
+        <TextField
+          size="small"
+          placeholder="Search Item Name..."
+          value={searchQuery}
+          onChange={(e) => {
+            setSearchQuery(e.target.value);
+            setPage(0);
+          }}
+          InputProps={{
+            startAdornment: (
+              <InputAdornment position="start">
+                <Search />
+              </InputAdornment>
+            ),
+          }}
+          sx={{ flexGrow: 1 }}
+        />
+      </Box>
 
       <TableContainer component={Paper}>
         <Table>
@@ -98,14 +161,24 @@ const Menu_Management = () => {
               <TableCell sx={{ fontWeight: "bold" }}>Item Name</TableCell>
               <TableCell sx={{ fontWeight: "bold" }}>Category</TableCell>
               <TableCell sx={{ fontWeight: "bold" }}>Status</TableCell>
-              <TableCell align="right" sx={{ fontWeight: "bold" }}>Actions</TableCell>
+              <TableCell align="right" sx={{ fontWeight: "bold" }}>
+                Actions
+              </TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
             {loading ? (
-              <TableRow><TableCell colSpan={4} align="center"><CircularProgress /></TableCell></TableRow>
+              <TableRow>
+                <TableCell colSpan={4} align="center">
+                  <CircularProgress />
+                </TableCell>
+              </TableRow>
             ) : error ? (
-              <TableRow><TableCell colSpan={4} align="center"><Alert severity="error">{error}</Alert></TableCell></TableRow>
+              <TableRow>
+                <TableCell colSpan={4} align="center">
+                  <Alert severity="error">{error}</Alert>
+                </TableCell>
+              </TableRow>
             ) : menuItems.length > 0 ? (
               menuItems.map((item) => (
                 <TableRow key={item.id}>
@@ -113,12 +186,18 @@ const Menu_Management = () => {
                   <TableCell>{item.category?.name || "N/A"}</TableCell>
                   <TableCell>{getStatusChip(item)}</TableCell>
                   <TableCell align="right">
-                    <IconButton onClick={() => handleOpenDialog(item)}><Edit /></IconButton>
+                    <IconButton onClick={() => handleOpenDialog(item)}>
+                      <Edit />
+                    </IconButton>
                   </TableCell>
                 </TableRow>
               ))
             ) : (
-              <TableRow><TableCell colSpan={4} align="center">No items found for this filter.</TableCell></TableRow>
+              <TableRow>
+                <TableCell colSpan={4} align="center">
+                  No items found for this filter.
+                </TableCell>
+              </TableRow>
             )}
           </TableBody>
           <TableFooter>

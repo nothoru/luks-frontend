@@ -1,7 +1,29 @@
 // src/components/AdminComponents/Staff_Management.jsx
 import React, { useState, useEffect, useCallback } from "react";
-import { Box, Typography, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, IconButton, Button, Dialog, DialogTitle, DialogContent, DialogActions, TextField, CircularProgress, Alert, TableFooter, TablePagination, } from "@mui/material";
-import { Edit, Delete } from "@mui/icons-material";
+import {
+  Box,
+  Typography,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Paper,
+  IconButton,
+  Button,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  TextField,
+  CircularProgress,
+  Alert,
+  TableFooter,
+  TablePagination,
+  InputAdornment,
+} from "@mui/material";
+import { Edit, Delete, Search } from "@mui/icons-material";
 import axiosInstance from "../../api/axiosInstance";
 import { useNotification } from "../../context/Notifications";
 
@@ -17,6 +39,7 @@ const StaffManagement = () => {
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [totalRows, setTotalRows] = useState(0);
+  const [searchQuery, setSearchQuery] = useState("");
 
   const { showNotification } = useNotification();
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
@@ -27,7 +50,7 @@ const StaffManagement = () => {
       setLoading(true);
       const url = `/api/users/admin/staff/?page=${
         page + 1
-      }&page_size=${rowsPerPage}`;
+      }&page_size=${rowsPerPage}&search=${searchQuery}`;
       const response = await axiosInstance.get(url);
       setStaffList(response.data.results);
       setTotalRows(response.data.count);
@@ -38,7 +61,7 @@ const StaffManagement = () => {
     } finally {
       setLoading(false);
     }
-  }, [page, rowsPerPage]);
+  }, [page, rowsPerPage, searchQuery]);
 
   useEffect(() => {
     fetchStaff();
@@ -96,7 +119,7 @@ const StaffManagement = () => {
             email: currentStaff.email,
             first_name: currentStaff.first_name,
             last_name: currentStaff.last_name,
-          }
+          },
         );
       } else {
         await axiosInstance.post("/api/users/admin/staff/", currentStaff);
@@ -108,7 +131,7 @@ const StaffManagement = () => {
         "Error saving staff member: " +
           (err.response?.data?.email ||
             err.response?.data?.password ||
-            err.message)
+            err.message),
       );
       console.error(err);
     }
@@ -147,7 +170,6 @@ const StaffManagement = () => {
     setPage(0);
   };
 
-  if (loading) return <CircularProgress />;
   if (error) return <Alert severity="error">{error}</Alert>;
 
   return (
@@ -164,6 +186,27 @@ const StaffManagement = () => {
         <Button variant="contained" onClick={() => handleDialogOpen()}>
           Add Staff
         </Button>
+      </Box>
+
+      {/* --- SEARCH BAR --- */}
+      <Box mb={2}>
+        <TextField
+          size="small"
+          placeholder="Search Staff Name or Email..."
+          value={searchQuery}
+          onChange={(e) => {
+            setSearchQuery(e.target.value);
+            setPage(0);
+          }}
+          InputProps={{
+            startAdornment: (
+              <InputAdornment position="start">
+                <Search />
+              </InputAdornment>
+            ),
+          }}
+          fullWidth
+        />
       </Box>
 
       <TableContainer component={Paper}>
@@ -236,12 +279,17 @@ const StaffManagement = () => {
         <DialogTitle>Confirm Deletion</DialogTitle>
         <DialogContent>
           <Typography>
-            Are you sure you want to delete this staff member? This action cannot be undone.
+            Are you sure you want to delete this staff member? This action
+            cannot be undone.
           </Typography>
         </DialogContent>
         <DialogActions>
           <Button onClick={handleCancelDelete}>Cancel</Button>
-          <Button onClick={handleConfirmDelete} color="error" variant="contained">
+          <Button
+            onClick={handleConfirmDelete}
+            color="error"
+            variant="contained"
+          >
             Delete
           </Button>
         </DialogActions>

@@ -21,14 +21,17 @@ import {
   TableFooter,
   Menu,
   MenuItem,
+  TextField,
+  InputAdornment,
+  TableSortLabel,
 } from "@mui/material";
 import MonetizationOnIcon from "@mui/icons-material/MonetizationOn";
 import ReceiptLongIcon from "@mui/icons-material/ReceiptLong";
 import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
 import PollIcon from "@mui/icons-material/Poll";
 import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown";
+import SearchIcon from "@mui/icons-material/Search";
 import axiosInstance from "../../api/axiosInstance";
-import { subDays } from "date-fns";
 import { useNotification } from "../../context/Notifications";
 import DateRangePicker from "./DateRangePicker";
 import {
@@ -72,6 +75,11 @@ const TransactionHistory = ({ dateRange }) => {
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [totalRows, setTotalRows] = useState(0);
 
+  // --- SEARCH & SORT STATES ---
+  const [searchQuery, setSearchQuery] = useState("");
+  const [orderBy, setOrderBy] = useState("processed_at");
+  const [order, setOrder] = useState("desc");
+
   const [anchorEl, setAnchorEl] = useState(null);
   const [isExporting, setIsExporting] = useState(false);
   const open = Boolean(anchorEl);
@@ -89,9 +97,12 @@ const TransactionHistory = ({ dateRange }) => {
       const startDateStr = toLocalDateString(dateRange.startDate);
       const endDateStr = toLocalDateString(dateRange.endDate);
 
+      // Determine ordering string (e.g. "-total_amount" for descending)
+      const orderingParam = order === "desc" ? `-${orderBy}` : orderBy;
+
       const url = `/api/orders/admin/sales-report/?page=${
         page + 1
-      }&page_size=${rowsPerPage}&start_date=${startDateStr}&end_date=${endDateStr}`;
+      }&page_size=${rowsPerPage}&start_date=${startDateStr}&end_date=${endDateStr}&search=${searchQuery}&ordering=${orderingParam}`;
 
       const response = await axiosInstance.get(url);
       setSalesData(response.data.results);
@@ -104,7 +115,7 @@ const TransactionHistory = ({ dateRange }) => {
     } finally {
       setLoading(false);
     }
-  }, [page, rowsPerPage, dateRange]);
+  }, [page, rowsPerPage, dateRange, searchQuery, orderBy, order]);
 
   useEffect(() => {
     fetchSalesData();
@@ -119,6 +130,12 @@ const TransactionHistory = ({ dateRange }) => {
     setPage(0);
   };
 
+  const handleRequestSort = (property) => {
+    const isAsc = orderBy === property && order === "asc";
+    setOrder(isAsc ? "desc" : "asc");
+    setOrderBy(property);
+  };
+
   const handleExport = async (format) => {
     handleClose();
     setIsExporting(true);
@@ -127,7 +144,7 @@ const TransactionHistory = ({ dateRange }) => {
       const endDateStr = toLocalDateString(dateRange.endDate);
 
       const response = await axiosInstance.get(
-        `/api/orders/admin/sales-report/all/?start_date=${startDateStr}&end_date=${endDateStr}`
+        `/api/orders/admin/sales-report/all/?start_date=${startDateStr}&end_date=${endDateStr}`,
       );
       const allTransactions = response.data;
 
@@ -135,7 +152,7 @@ const TransactionHistory = ({ dateRange }) => {
         exportTransactionsToPDF(
           allTransactions,
           dateRange.startDate,
-          dateRange.endDate
+          dateRange.endDate,
         );
       } else if (format === "csv") {
         exportTransactionsToCSV(allTransactions);
@@ -156,35 +173,80 @@ const TransactionHistory = ({ dateRange }) => {
 
   return (
     <Box>
-      <Stack direction="row" justifyContent="flex-end" mb={2}>
-        <Button
-          variant="contained"
-          onClick={handleClick}
-          disabled={totalRows === 0 || isExporting}
-          endIcon={<ArrowDropDownIcon />}
-        >
-          {isExporting ? (
-            <CircularProgress size={24} color="inherit" />
-          ) : (
-            "Export"
-          )}
-        </Button>
-        <Menu anchorEl={anchorEl} open={open} onClose={handleClose}>
-          <MenuItem onClick={() => handleExport("pdf")}>Export as PDF</MenuItem>
-          <MenuItem onClick={() => handleExport("csv")}>Export as CSV</MenuItem>
-        </Menu>
+      <Stack
+        direction="row"
+        justifyContent="space-between"
+        alignItems="center"
+        mb={2}
+        gap={2}
+      >
+        <TextField
+          size="small"
+          placeholder="Search Order # or Name..."
+          value={searchQuery}
+          onChange={(e) => {
+            setSearchQuery(e.target.value);
+            setPage(0);
+          }}
+          InputProps={{
+            startAdornment: (
+              <InputAdornment position="start">
+                <SearchIcon />
+              </InputAdornment>
+            ),
+          }}
+          sx={{ width: 300 }}
+        />
+
+        <Box>
+          <Button
+            variant="contained"
+            onClick={handleClick}
+            disabled={totalRows === 0 || isExporting}
+            endIcon={<ArrowDropDownIcon />}
+          >
+            {isExporting ? (
+              <CircularProgress size={24} color="inherit" />
+            ) : (
+              "Export"
+            )}
+          </Button>
+          <Menu anchorEl={anchorEl} open={open} onClose={handleClose}>
+            <MenuItem onClick={() => handleExport("pdf")}>
+              Export as PDF
+            </MenuItem>
+            <MenuItem onClick={() => handleExport("csv")}>
+              Export as CSV
+            </MenuItem>
+          </Menu>
+        </Box>
       </Stack>
+
       <TableContainer component={Paper}>
         <Table>
           <TableHead>
             <TableRow>
               <TableCell sx={{ fontWeight: "bold" }}>Order #</TableCell>
-              <TableCell sx={{ fontWeight: "bold" }}>Date & Time</TableCell>
+              <TableCell sx={{ fontWeight: "bold" }}>
+                <TableSortLabel
+                  active={orderBy === "processed_at"}
+                  direction={orderBy === "processed_at" ? order : "asc"}
+                  onClick={() => handleRequestSort("processed_at")}
+                >
+                  Date & Time
+                </TableSortLabel>
+              </TableCell>
               <TableCell sx={{ fontWeight: "bold" }}>Type</TableCell>
               <TableCell sx={{ fontWeight: "bold" }}>Customer/Staff</TableCell>
               <TableCell sx={{ fontWeight: "bold" }}>Items</TableCell>
               <TableCell sx={{ fontWeight: "bold" }} align="right">
-                Total
+                <TableSortLabel
+                  active={orderBy === "total_amount"}
+                  direction={orderBy === "total_amount" ? order : "asc"}
+                  onClick={() => handleRequestSort("total_amount")}
+                >
+                  Total
+                </TableSortLabel>
               </TableCell>
             </TableRow>
           </TableHead>
@@ -211,8 +273,8 @@ const TransactionHistory = ({ dateRange }) => {
                     {row.user
                       ? `${row.user.first_name} ${row.user.last_name}`
                       : row.processed_by_staff
-                      ? row.processed_by_staff.first_name
-                      : "Walk-in"}
+                        ? row.processed_by_staff.first_name
+                        : "Walk-in"}
                   </TableCell>
                   <TableCell
                     sx={{
@@ -232,7 +294,7 @@ const TransactionHistory = ({ dateRange }) => {
             ) : (
               <TableRow>
                 <TableCell colSpan={6} align="center">
-                  No transaction records found for this period.
+                  No transaction records found.
                 </TableCell>
               </TableRow>
             )}
@@ -276,7 +338,7 @@ const PerformanceReport = ({ dateRange }) => {
         const endDateStr = toLocalDateString(dateRange.endDate);
 
         const response = await axiosInstance.get(
-          `/api/analytics/performance-report/?start_date=${startDateStr}&end_date=${endDateStr}`
+          `/api/analytics/performance-report/?start_date=${startDateStr}&end_date=${endDateStr}`,
         );
         setData(response.data);
         setError(null);
@@ -413,8 +475,8 @@ const PerformanceReport = ({ dateRange }) => {
 const Sales = () => {
   const [currentTab, setCurrentTab] = useState(0);
   const [dateRange, setDateRange] = useState({
-    startDate: new Date(), // Default start date is today
-    endDate: new Date(), // Default end date is today
+    startDate: new Date(),
+    endDate: new Date(),
   });
 
   const handleTabChange = (event, newValue) => {
