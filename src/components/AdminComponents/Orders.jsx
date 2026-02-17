@@ -109,11 +109,7 @@ const Orders = () => {
         return;
       }
       if (amountReceived < totalAmount) {
-        showNotification(
-          `Error: Amount Received (₱${amountReceived.toFixed(
-            2,
-          )}) must be >= total (₱${totalAmount.toFixed(2)}).`,
-        );
+        showNotification("Error: Insufficient Amount");
         return;
       }
       payload.table_number = tempTableNumber;
@@ -393,24 +389,24 @@ const Orders = () => {
                 Table No:
                 {selectedOrder.status === "pending" &&
                 selectedOrder.dining_method === "dine-in" ? (
-                  /* --- REVISION 2 START: Input Limitation --- */
                   <TextField
                     size="small"
                     variant="standard"
                     sx={{ width: "60px", ml: 1 }}
                     value={tempTableNumber}
-                    // Strict Numeric Input
                     onChange={(e) => {
                       const regex = /^[0-9\b]+$/;
                       if (e.target.value === "" || regex.test(e.target.value)) {
                         setTempTableNumber(e.target.value);
                       }
                     }}
-                    inputProps={{ inputMode: "numeric", pattern: "[0-9]*" }}
+                    inputProps={{
+                      inputMode: "numeric",
+                      pattern: "[0-9]*",
+                      maxLength: 10,
+                    }}
                   />
                 ) : (
-                  /* --- REVISION 2 END --- */
-
                   <span style={{ marginLeft: 8, fontWeight: "bold" }}>
                     {selectedOrder.table_number || "N/A"}
                   </span>
@@ -440,7 +436,11 @@ const Orders = () => {
                       label="Amount Received"
                       type="number"
                       value={tempAmountReceived}
-                      onChange={(e) => setTempAmountReceived(e.target.value)}
+                      onChange={(e) => {
+                        if (e.target.value.length <= 10) {
+                          setTempAmountReceived(e.target.value);
+                        }
+                      }}
                       InputProps={{
                         startAdornment: (
                           <InputAdornment position="start">₱</InputAdornment>

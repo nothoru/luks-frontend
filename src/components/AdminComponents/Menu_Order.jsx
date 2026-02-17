@@ -202,7 +202,12 @@ const Menu_order = () => {
       let errorMessage = "Error creating POS order.";
 
       if (err.response && err.response.data) {
-        if (err.response.data.error) {
+        if (
+          typeof err.response.data === "string" &&
+          err.response.data.trim().startsWith("<")
+        ) {
+          errorMessage = "Server Error: Input value too large or invalid.";
+        } else if (err.response.data.error) {
           errorMessage = err.response.data.error;
         } else {
           const errorValues = Object.values(err.response.data).flat();
@@ -212,7 +217,6 @@ const Menu_order = () => {
         }
       }
       showNotification(errorMessage, "error");
-      // --- REVISION END ---
       console.error(err);
     } finally {
       setIsSubmitting(false);
@@ -422,7 +426,11 @@ const Menu_order = () => {
                   setTableNumber(e.target.value);
                 }
               }}
-              inputProps={{ inputMode: "numeric", pattern: "[0-9]*" }}
+              inputProps={{
+                inputMode: "numeric",
+                pattern: "[0-9]*",
+                maxLength: 10,
+              }}
               size="small"
               fullWidth
               disabled={diningOption === "take-out"}
@@ -434,13 +442,17 @@ const Menu_order = () => {
               label="Cash Received"
               type="number"
               size="small"
+              value={cashReceived}
+              onChange={(e) => {
+                if (e.target.value.length <= 10) {
+                  setCashReceived(e.target.value);
+                }
+              }}
               InputProps={{
                 startAdornment: (
                   <InputAdornment position="start">₱</InputAdornment>
                 ),
               }}
-              value={cashReceived}
-              onChange={(e) => setCashReceived(e.target.value)}
             />
             <TextField
               fullWidth
