@@ -1,8 +1,37 @@
 // src/components/AdminComponents/Feedback.jsx
 import React, { useState, useEffect, useCallback } from "react";
-import { Box, Typography, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, IconButton, Dialog, DialogTitle, DialogContent, DialogActions, Button, CircularProgress, Alert, TableFooter, TablePagination, } from "@mui/material";
-import { SentimentSatisfiedAlt, SentimentNeutral, SentimentDissatisfied, Close, } from "@mui/icons-material";
+import {
+  Box,
+  Typography,
+  Paper,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  IconButton,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Button,
+  CircularProgress,
+  Alert,
+  TableFooter,
+  TablePagination,
+  Grid,
+} from "@mui/material";
+import {
+  SentimentSatisfiedAlt,
+  SentimentNeutral,
+  SentimentDissatisfied,
+  Close,
+  RateReview,
+} from "@mui/icons-material";
 import axiosInstance from "../../api/axiosInstance";
+
+// --- Helper Components ---
 
 const getSentimentIcon = (label) => {
   switch (label) {
@@ -17,8 +46,38 @@ const getSentimentIcon = (label) => {
   }
 };
 
+const FeedbackStatCard = ({ title, count, icon, color }) => (
+  <Paper
+    elevation={2}
+    sx={{
+      p: 2,
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "space-between",
+      height: "100%",
+      borderLeft: `5px solid ${color}`,
+    }}
+  >
+    <Box>
+      <Typography variant="subtitle2" color="text.secondary">
+        {title}
+      </Typography>
+      <Typography variant="h4" fontWeight="bold">
+        {count}
+      </Typography>
+    </Box>
+    <Box sx={{ color: color, opacity: 0.8 }}>{icon}</Box>
+  </Paper>
+);
+
 const Feedback = () => {
   const [feedbacks, setFeedbacks] = useState([]);
+  const [stats, setStats] = useState({
+    total: 0,
+    positive: 0,
+    neutral: 0,
+    negative: 0,
+  });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedFeedback, setSelectedFeedback] = useState(null);
@@ -29,11 +88,16 @@ const Feedback = () => {
 
   const fetchFeedbacks = useCallback(async () => {
     try {
-      setLoading(true);
-      const url = `/api/feedback/admin/all/?page=${page + 1}&page_size=${rowsPerPage}`;
-      const response = await axiosInstance.get(url);
-      setFeedbacks(response.data.results);
-      setTotalRows(response.data.count);
+      const listUrl = `/api/feedback/admin/all/?page=${
+        page + 1
+      }&page_size=${rowsPerPage}`;
+      const listRes = await axiosInstance.get(listUrl);
+      setFeedbacks(listRes.data.results);
+      setTotalRows(listRes.data.count);
+
+      const statsRes = await axiosInstance.get("/api/feedback/admin/stats/");
+      setStats(statsRes.data);
+
       setError(null);
     } catch (err) {
       setError("Failed to fetch feedback data.");
@@ -61,17 +125,47 @@ const Feedback = () => {
 
   return (
     <Box>
-      <Box
-        display="flex"
-        justifyContent="space-between"
-        alignItems="center"
-        mb={1}
-      >
-        <Typography variant="h4" fontWeight="bold">
-          Feedback
-        </Typography>
-      </Box>
+      <Typography variant="h4" fontWeight="bold" gutterBottom>
+        Customer Feedback
+      </Typography>
 
+      {/* --- NEW: Summary Cards --- */}
+      <Grid container spacing={3} sx={{ mb: 4 }}>
+        <Grid item xs={12} sm={6} md={3}>
+          <FeedbackStatCard
+            title="Total Feedback"
+            count={stats.total}
+            icon={<RateReview fontSize="large" />}
+            color="#1976d2" // Blue
+          />
+        </Grid>
+        <Grid item xs={12} sm={6} md={3}>
+          <FeedbackStatCard
+            title="Positive"
+            count={stats.positive}
+            icon={<SentimentSatisfiedAlt fontSize="large" />}
+            color="#2e7d32" // Green
+          />
+        </Grid>
+        <Grid item xs={12} sm={6} md={3}>
+          <FeedbackStatCard
+            title="Neutral"
+            count={stats.neutral}
+            icon={<SentimentNeutral fontSize="large" />}
+            color="#ed6c02" // Orange
+          />
+        </Grid>
+        <Grid item xs={12} sm={6} md={3}>
+          <FeedbackStatCard
+            title="Negative"
+            count={stats.negative}
+            icon={<SentimentDissatisfied fontSize="large" />}
+            color="#d32f2f" // Red
+          />
+        </Grid>
+      </Grid>
+
+      {/* --- Table Section --- */}
       <TableContainer component={Paper}>
         <Table stickyHeader size="small">
           <TableHead>
@@ -89,7 +183,10 @@ const Feedback = () => {
                 <TableRow
                   key={feedback.id}
                   onClick={() => setSelectedFeedback(feedback)}
-                  sx={{ cursor: "pointer", "&:hover": { bgcolor: "grey.200" } }}
+                  sx={{
+                    cursor: "pointer",
+                    "&:hover": { bgcolor: "grey.200" },
+                  }}
                 >
                   <TableCell>{feedback.id}</TableCell>
                   <TableCell>
@@ -114,11 +211,11 @@ const Feedback = () => {
                 </TableRow>
               ))
             ) : (
-                <TableRow>
-                    <TableCell colSpan={5} align="center">
-                        No feedback found.
-                    </TableCell>
-                </TableRow>
+              <TableRow>
+                <TableCell colSpan={5} align="center">
+                  No feedback found.
+                </TableCell>
+              </TableRow>
             )}
           </TableBody>
 
@@ -138,6 +235,7 @@ const Feedback = () => {
         </Table>
       </TableContainer>
 
+      {/* --- Dialog for Details --- */}
       <Dialog
         open={!!selectedFeedback}
         onClose={() => setSelectedFeedback(null)}
@@ -165,6 +263,13 @@ const Feedback = () => {
                 <strong>Date:</strong>{" "}
                 {new Date(selectedFeedback.created_at).toLocaleString()}
               </Typography>
+              <Box display="flex" alignItems="center" mt={1} gap={1}>
+                <strong>Sentiment:</strong>
+                {getSentimentIcon(selectedFeedback.sentiment_label)}
+                <Typography textTransform="capitalize">
+                  {selectedFeedback.sentiment_label}
+                </Typography>
+              </Box>
               <Typography variant="h6" mt={2}>
                 Comment:
               </Typography>
