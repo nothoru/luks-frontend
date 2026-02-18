@@ -1,4 +1,4 @@
-// src/pages/Customers/Menu.jsx (New Compact Version)
+// src/pages/Customers/Menu.jsx
 import React, { useState, useEffect, useRef } from "react";
 import axiosInstance from "../../api/axiosInstance";
 import {
@@ -15,8 +15,11 @@ import {
   Tabs,
   Tab,
   AppBar,
+  TextField,
+  InputAdornment,
 } from "@mui/material";
 import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
+import SearchIcon from "@mui/icons-material/Search"; // <-- Import Search Icon
 import ProductModal from "../../components/ProductModal";
 import Base from "../../components/Base";
 
@@ -122,6 +125,11 @@ const Menu = () => {
   const [selectedCategory, setSelectedCategory] = useState(0);
   const [productModalOpen, setProductModalOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
+
+  // --- REVISION START: Search State ---
+  const [searchQuery, setSearchQuery] = useState("");
+  // --- REVISION END ---
+
   const categoryRefs = useRef([]);
 
   useEffect(() => {
@@ -135,7 +143,7 @@ const Menu = () => {
         setMenuItems(menuResponse.data);
         setCategories(categoryResponse.data);
         categoryRefs.current = categoryResponse.data.map(() =>
-          React.createRef()
+          React.createRef(),
         );
         setError(null);
       } catch (err) {
@@ -172,6 +180,26 @@ const Menu = () => {
           <Alert severity="error">{error}</Alert>
         ) : (
           <>
+            {/* --- REVISION START: Search Bar --- */}
+            <Box sx={{ mb: 2 }}>
+              <TextField
+                fullWidth
+                placeholder="Search for a dish..."
+                variant="outlined"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <SearchIcon color="action" />
+                    </InputAdornment>
+                  ),
+                }}
+                sx={{ bgcolor: "background.paper", borderRadius: 1 }}
+              />
+            </Box>
+            {/* --- REVISION END --- */}
+
             <AppBar
               position="sticky"
               elevation={1}
@@ -200,23 +228,34 @@ const Menu = () => {
             </AppBar>
 
             <Box sx={{ pt: 4 }}>
-              {categories.map((category, index) => (
-                <Box
-                  key={category.id}
-                  ref={categoryRefs.current[index]}
-                  sx={{ mb: 5 }}
-                >
-                  <Typography
-                    variant="h4"
-                    component="h2"
-                    sx={{ fontWeight: "bold", mb: 3 }}
+              {categories.map((category, index) => {
+                // --- REVISION START: Filtering Logic ---
+                // Filter items that match BOTH the category AND the search query
+                const filteredItems = menuItems.filter(
+                  (item) =>
+                    item.category.name === category.name &&
+                    item.name.toLowerCase().includes(searchQuery.toLowerCase()),
+                );
+
+                // If no items match the search in this category, hide the category
+                if (filteredItems.length === 0) return null;
+                // --- REVISION END ---
+
+                return (
+                  <Box
+                    key={category.id}
+                    ref={categoryRefs.current[index]}
+                    sx={{ mb: 5 }}
                   >
-                    {category.name}
-                  </Typography>
-                  <Grid container spacing={{ xs: 2, md: 3 }}>
-                    {menuItems
-                      .filter((item) => item.category.name === category.name)
-                      .map((item) => (
+                    <Typography
+                      variant="h4"
+                      component="h2"
+                      sx={{ fontWeight: "bold", mb: 3 }}
+                    >
+                      {category.name}
+                    </Typography>
+                    <Grid container spacing={{ xs: 2, md: 3 }}>
+                      {filteredItems.map((item) => (
                         <Grid item xs={6} sm={4} md={3} key={item.id}>
                           <MenuCard
                             item={item}
@@ -224,9 +263,24 @@ const Menu = () => {
                           />
                         </Grid>
                       ))}
-                  </Grid>
-                </Box>
-              ))}
+                    </Grid>
+                  </Box>
+                );
+              })}
+
+              {/* Optional: Show message if search yields no results at all */}
+              {searchQuery &&
+                menuItems.filter((item) =>
+                  item.name.toLowerCase().includes(searchQuery.toLowerCase()),
+                ).length === 0 && (
+                  <Typography
+                    variant="h6"
+                    align="center"
+                    sx={{ mt: 5, color: "text.secondary" }}
+                  >
+                    No dishes found matching "{searchQuery}"
+                  </Typography>
+                )}
             </Box>
           </>
         )}
